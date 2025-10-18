@@ -22,7 +22,6 @@ public class World : MonoBehaviour
 
     CancellationTokenSource taskTokenSource = new CancellationTokenSource();
 
-
     //public Dictionary<Vector3Int, ChunkData> chunkDataDictionary = new Dictionary<Vector3Int, ChunkData>();
     //public Dictionary<Vector3Int, ChunkRenderer> chunkDictionary = new Dictionary<Vector3Int, ChunkRenderer>();
 
@@ -81,10 +80,6 @@ public class World : MonoBehaviour
         {
             worldData.chunkDataDictionary.Add(calculatedData.Key, calculatedData.Value);
         }
-        foreach (var chunkData in worldData.chunkDataDictionary.Values)
-        {
-            AddTreeLeafs(chunkData);
-        }
 
         ConcurrentDictionary<Vector3Int, MeshData> meshDataDictionary = new ConcurrentDictionary<Vector3Int, MeshData>();
         
@@ -104,14 +99,6 @@ public class World : MonoBehaviour
         }
 
         StartCoroutine(ChunkCreationCoroutine(meshDataDictionary));
-    }
-
-    private void AddTreeLeafs(ChunkData chunkData)
-    {
-        foreach (var treeLeafes in chunkData.treeData.treeLeafesSolid)
-        {
-            Chunk.SetBlock(chunkData, treeLeafes, BlockType.TreeLeafsSolid);
-        }
     }
 
     private Task<ConcurrentDictionary<Vector3Int, MeshData>> CreateMeshDataAsync(List<ChunkData> dataToRender)
@@ -225,7 +212,6 @@ public class World : MonoBehaviour
         {
             pos -= (normal / 2);
         }
-
 
         return (float)pos;
     }

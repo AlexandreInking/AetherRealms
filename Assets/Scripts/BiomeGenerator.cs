@@ -15,15 +15,6 @@ public class BiomeGenerator : MonoBehaviour
 
     public BlockLayerHandler startLayerHandler;
 
-    public TreeGenerator treeGenerator;
-
-    internal TreeData GetTreeData(ChunkData data, Vector2Int mapSeedOffset)
-    {
-        if (treeGenerator == null)
-            return new TreeData();
-        return treeGenerator.GenerateTreeData(data, mapSeedOffset);
-    }
-
     public List<BlockLayerHandler> additionalLayerHandlers;
 
     public ChunkData ProcessChunkColumn(ChunkData data, int x, int z, Vector2Int mapSeedOffset, int? terrainHeightNoise)
