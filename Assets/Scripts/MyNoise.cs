@@ -47,4 +47,21 @@ public static class MyNoise
 
         return total / amplitudeSum;
     }
+
+    public static float OctavePerlin3D(float x, float y, float z, NoiseSettings settings)
+    {
+        // Aplicamos zoom y offsets a las 3 coordenadas
+        x *= settings.noiseZoom;
+        y *= settings.noiseZoom;
+        z *= settings.noiseZoom;
+
+        // Combinamos 3 muestras de ruido 2D para simular un ruido 3D. 
+        // Es más rápido que un ruido 3D real y suficiente para las cuevas.
+        float xy = OctavePerlin(x, y, settings);
+        float yz = OctavePerlin(y, z, settings);
+        float xz = OctavePerlin(x, z, settings);
+
+        // Promediamos las 3 combinaciones
+        return (xy + yz + xz) / 3f;
+    }
 }

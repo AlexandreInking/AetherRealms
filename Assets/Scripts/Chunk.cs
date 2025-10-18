@@ -53,7 +53,7 @@ public static class Chunk
             return chunkData.blocks[index];
         }
 
-        return chunkData.worldReference.GetBlockFromChunkCoordinates(chunkData, chunkData.worldPosition.x + x, chunkData.worldPosition.y + y, chunkData.worldPosition.z + z);
+        return chunkData.worldReference.GetBlockFromChunkCoordinates(chunkData.worldPosition.x + x, chunkData.worldPosition.y + y, chunkData.worldPosition.z + z);
     }
 
     public static void SetBlock(ChunkData chunkData, Vector3Int localPosition, BlockType block)

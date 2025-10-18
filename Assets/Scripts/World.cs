@@ -10,23 +10,16 @@ using UnityEngine.Events;
 
 public class World : MonoBehaviour
 {
-    public int mapSizeInChunks = 6;
+    // mapSizeInChunks y chunkDrawingRange ya no se usan aquí, los controla el GameManager
     public int chunkSize = 16, chunkHeight = 100;
-    public int chunkDrawingRange = 8;
-
     public GameObject chunkPrefab;
     public WorldRenderer worldRenderer;
-
     public TerrainGenerator terrainGenerator;
     public Vector2Int mapSeedOffset;
-
+    
     CancellationTokenSource taskTokenSource = new CancellationTokenSource();
-
-    //public Dictionary<Vector3Int, ChunkData> chunkDataDictionary = new Dictionary<Vector3Int, ChunkData>();
-    //public Dictionary<Vector3Int, ChunkRenderer> chunkDictionary = new Dictionary<Vector3Int, ChunkRenderer>();
-
-    public UnityEvent OnWorldCreated, OnNewChunksGenerated;
-
+    
+    public UnityEvent OnWorldCreated; // Ya no necesitamos OnNewChunksGenerated
     public WorldData worldData { get; private set; }
     public bool IsWorldCreated { get; private set; }
 
@@ -41,52 +34,42 @@ public class World : MonoBehaviour
         };
     }
 
-    public async void GenerateWorld()
+    // NUEVO MÉTODO DE GENERACIÓN PARA RTS
+    public async void GenerateWorld(int mapSize)
     {
-        await GenerateWorld(Vector3Int.zero);
-    }
+        // Genera los puntos de bioma basados en el centro del mapa
+        terrainGenerator.GenerateBiomePoints(Vector3.zero, mapSize, chunkSize, mapSeedOffset);
 
-    private async Task GenerateWorld(Vector3Int position)
-    {
-        terrainGenerator.GenerateBiomePoints(position, chunkDrawingRange, chunkSize, mapSeedOffset);
-       
-        WorldGenerationData worldGenerationData = await Task.Run(() => GetPositionsThatPlayerSees(position),taskTokenSource.Token);
-
-        foreach (Vector3Int pos in worldGenerationData.chunkPositionsToRemove)
+        // Calcula todas las posiciones de los chunks para el mapa completo
+        List<Vector3Int> chunkPositionsToCreate = new List<Vector3Int>();
+        for (int x = -mapSize / 2; x < mapSize / 2; x++)
         {
-            WorldDataHelper.RemoveChunk(this, pos);
+            for (int z = -mapSize / 2; z < mapSize / 2; z++)
+            {
+                chunkPositionsToCreate.Add(new Vector3Int(x * chunkSize, 0, z * chunkSize));
+            }
         }
-
-        foreach (Vector3Int pos in worldGenerationData.chunkDataToRemove)
-        {
-            WorldDataHelper.RemoveChunkData(this, pos);
-        }
-
+        
+        // --- El resto del proceso es similar pero simplificado ---
 
         ConcurrentDictionary<Vector3Int, ChunkData> dataDictionary = null;
-
         try
         {
-            dataDictionary = await CalculateWorldChunkData(worldGenerationData.chunkDataPositionsToCreate);
+            dataDictionary = await CalculateWorldChunkData(chunkPositionsToCreate);
         }
         catch (Exception)
         {
             Debug.Log("Task canceled");
             return;
         }
-        
 
         foreach (var calculatedData in dataDictionary)
         {
             worldData.chunkDataDictionary.Add(calculatedData.Key, calculatedData.Value);
         }
-
-        ConcurrentDictionary<Vector3Int, MeshData> meshDataDictionary = new ConcurrentDictionary<Vector3Int, MeshData>();
         
-        List<ChunkData> dataToRender = worldData.chunkDataDictionary
-            .Where(keyvaluepair => worldGenerationData.chunkPositionsToCreate.Contains(keyvaluepair.Key))
-            .Select(keyvalpair => keyvalpair.Value)
-            .ToList();
+        ConcurrentDictionary<Vector3Int, MeshData> meshDataDictionary = new ConcurrentDictionary<Vector3Int, MeshData>();
+        List<ChunkData> dataToRender = worldData.chunkDataDictionary.Values.ToList();
 
         try
         {
@@ -216,72 +199,15 @@ public class World : MonoBehaviour
         return (float)pos;
     }
 
-
-    private WorldGenerationData GetPositionsThatPlayerSees(Vector3Int playerPosition)
+    internal BlockType GetBlockFromChunkCoordinates(int x, int y, int z)
     {
-        List<Vector3Int> allChunkPositionsNeeded = WorldDataHelper.GetChunkPositionsAroundPlayer(this, playerPosition);
-
-        List<Vector3Int> allChunkDataPositionsNeeded = WorldDataHelper.GetDataPositionsAroundPlayer(this, playerPosition);
-
-        List<Vector3Int> chunkPositionsToCreate = WorldDataHelper.SelectPositonsToCreate(worldData, allChunkPositionsNeeded, playerPosition);
-        List<Vector3Int> chunkDataPositionsToCreate = WorldDataHelper.SelectDataPositonsToCreate(worldData, allChunkDataPositionsNeeded, playerPosition);
-
-        List<Vector3Int> chunkPositionsToRemove = WorldDataHelper.GetUnnededChunks(worldData, allChunkPositionsNeeded);
-        List<Vector3Int> chunkDataToRemove = WorldDataHelper.GetUnnededData(worldData, allChunkDataPositionsNeeded);
-
-        WorldGenerationData data = new WorldGenerationData
-        {
-            chunkPositionsToCreate = chunkPositionsToCreate,
-            chunkDataPositionsToCreate = chunkDataPositionsToCreate,
-            chunkPositionsToRemove = chunkPositionsToRemove,
-            chunkDataToRemove = chunkDataToRemove,
-            chunkPositionsToUpdate = new List<Vector3Int>()
-        };
-        return data;
-
-    }
-
-    internal async void LoadAdditionalChunksRequest(GameObject player)
-    {
-        Debug.Log("Load more chunks");
-        await GenerateWorld(Vector3Int.RoundToInt(player.transform.position));
-        OnNewChunksGenerated?.Invoke();
-    }
-
-    internal BlockType GetBlockFromChunkCoordinates(ChunkData chunkData, int x, int y, int z)
-    {
-        Vector3Int pos = Chunk.ChunkPositionFromBlockCoords(this, x, y, z);
-        ChunkData containerChunk = null;
-
-        worldData.chunkDataDictionary.TryGetValue(pos, out containerChunk);
+        Vector3Int pos = new Vector3Int(x, y, z);
+        ChunkData containerChunk = WorldDataHelper.GetChunkData(this, pos);
 
         if (containerChunk == null)
             return BlockType.Nothing;
-        Vector3Int blockInCHunkCoordinates = Chunk.GetBlockInChunkCoordinates(containerChunk, new Vector3Int(x, y, z));
-        return Chunk.GetBlockFromChunkCoordinates(containerChunk, blockInCHunkCoordinates);
-    }
 
-    public void OnDisable()
-    {
-        taskTokenSource.Cancel();
+        Vector3Int blockInChunkCoordinates = Chunk.GetBlockInChunkCoordinates(containerChunk, pos);
+        return Chunk.GetBlockFromChunkCoordinates(containerChunk, blockInChunkCoordinates);
     }
-
-    public struct WorldGenerationData
-    {
-        public List<Vector3Int> chunkPositionsToCreate;
-        public List<Vector3Int> chunkDataPositionsToCreate;
-        public List<Vector3Int> chunkPositionsToRemove;
-        public List<Vector3Int> chunkDataToRemove;
-        public List<Vector3Int> chunkPositionsToUpdate;
-    }
-
-    
 }
-public struct WorldData
-{
-    public Dictionary<Vector3Int, ChunkData> chunkDataDictionary;
-    public Dictionary<Vector3Int, ChunkRenderer> chunkDictionary;
-    public int chunkSize;
-    public int chunkHeight;
-}
-
