@@ -64,4 +64,23 @@ public static class MyNoise
         // Promediamos las 3 combinaciones
         return (xy + yz + xz) / 3f;
     }
+    public static float OctavePerlin3D_Noodle(float x, float y, float z, NoiseSettings settings)
+    {
+        // Aplicamos el zoom a X y Z como siempre
+        x *= settings.noiseZoom;
+        z *= settings.noiseZoom;
+
+        // ¡Aquí está la clave! Aplicamos el nuevo escalado vertical solo al eje Y
+        y *= settings.noiseVerticalScale;
+
+        // El resto del cálculo es igual que antes, promediando muestras 2D
+        float xy = OctavePerlin(x, y, settings);
+        float yz = OctavePerlin(y, z, settings);
+        float xz = OctavePerlin(x, z, settings);
+        float yx = OctavePerlin(y, x, settings);
+        float zy = OctavePerlin(z, y, settings);
+        float zx = OctavePerlin(z, x, settings);
+
+        return (xy + yz + xz + yx + zy + zx) / 6f;
+    }
 }

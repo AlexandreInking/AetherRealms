@@ -12,4 +12,5 @@ public class NoiseSettings : ScriptableObject
     public float persistance;
     public float redistributionModifier;
     public float exponent;
+    public float noiseVerticalScale = 1f; // Permite estirar o comprimir el ruido en el eje Y
 }

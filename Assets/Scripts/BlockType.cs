@@ -19,8 +19,6 @@ public enum BlockType
     GoldStone,
     IronStone,
     CrystalStone,
-    Stalactite,
-    Stalagmite,
     Bedrock,
     Terracotta,
     Sandstone,

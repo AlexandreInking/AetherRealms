@@ -25,6 +25,16 @@ public class BiomeGenerator : MonoBehaviour
     public bool useSpaghettiCaves = true; // Parámetro para activar/desactivar
     public SpaghettiCaveLayerHandler spaghettiCaveLayerHandler; // Referencia al nuevo script
 
+    // -- AÑADIR ESTAS DOS LÍNEAS --
+    public bool useNoodleCaves = true; // Parámetro para activar/desactivar
+    public NoodleCaveLayerHandler noodleCaveLayerHandler; // Referencia al nuevo script
+
+    [Header("Liquid & Features")]
+    public LiquidLayerHandler waterLayer; // Referencia para el agua
+    public LiquidLayerHandler lavaLayer;  // Referencia para la lava
+    public LiquidLayerHandler oilLayer;   // Referencia para el petróleo
+    public SubterraneanFeatureLayerHandler featureHandler; // Referencia para huesos/cristales
+
     public ChunkData ProcessChunkColumn(ChunkData data, int x, int z, Vector2Int mapSeedOffset, int? terrainHeightNoise)
     {
         biomeNoiseSettings.worldOffset = mapSeedOffset;
@@ -35,31 +45,57 @@ public class BiomeGenerator : MonoBehaviour
         else
             groundPosition = terrainHeightNoise.Value;
 
-        // 1. Generar el terreno base (piedra, tierra, etc.)
+        // Step 1: Generate base terrain
         for (int y = data.worldPosition.y; y < data.worldPosition.y + data.chunkHeight; y++)
         {
             startLayerHandler.Handle(data, x, y, z, groundPosition, mapSeedOffset);
         }
 
-        // 2. Añadir capas adicionales (superficie, agua, etc.)
-        foreach (var layer in additionalLayerHandlers)
-        {
-            layer.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
-        }
-
-        // 3. ¡NUEVO! Tallar las cuevas si están activadas
+        // Step 2: Carve all caves (cheese, spaghetti, noodle)
         if (useCheeseCaves && cheeseCaveLayerHandler != null)
         {
             cheeseCaveLayerHandler.GenerateCaveColumn(data, x, z, groundPosition, mapSeedOffset);
         }
 
-        // -- AÑADIR ESTE BLOQUE --
-        // 4. Tallar las cuevas de espagueti
         if (useSpaghettiCaves && spaghettiCaveLayerHandler != null)
         {
             spaghettiCaveLayerHandler.GenerateCaves(data, x, z, groundPosition, mapSeedOffset);
         }
-        // ------------------------
+
+        if (useNoodleCaves && noodleCaveLayerHandler != null)
+        {
+            noodleCaveLayerHandler.GenerateCaves(data, groundPosition, mapSeedOffset);
+        }
+
+        // Step 3: Place liquids (water, lava, oil) and subterranean features
+        if (waterLayer != null)
+        {
+            waterLayer.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
+        }
+
+        if (lavaLayer != null)
+        {
+            lavaLayer.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
+        }
+
+        if (oilLayer != null)
+        {
+            oilLayer.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
+        }
+
+        if (featureHandler != null)
+        {
+            featureHandler.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
+        }
+
+        // Step 4: Generate features that depend on previous steps (bones, crystals)
+        // Additional dependent feature generation can be added here
+
+        // Step 5: Apply final surface decoration layers
+        foreach (var layer in additionalLayerHandlers)
+        {
+            layer.Handle(data, x, data.worldPosition.y, z, groundPosition, mapSeedOffset);
+        }
 
         return data;
     }
