@@ -14,22 +14,26 @@ public class LiquidLayerHandler : BlockLayerHandler
 
     protected override bool TryHandling(ChunkData chunkData, int x, int y, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
     {
-        // Este manejador se aplica a los bloques que están por encima del terreno pero por debajo del nivel del líquido
+        int localY = y - chunkData.worldPosition.y;
+
         if (y > surfaceHeightNoise && y <= liquidLevel)
         {
-            Vector3Int pos = new Vector3Int(x, y, z);
+            Vector3Int pos = new Vector3Int(x, localY, z);
             Chunk.SetBlock(chunkData, pos, liquidType);
 
-            // Si estamos justo un bloque por encima del terreno original, creamos una orilla
             if (y == surfaceHeightNoise + 1 && shoreBlockType != BlockType.Nothing)
             {
                 for (int i = 0; i < shoreSpread; i++)
                 {
-                    pos.y = surfaceHeightNoise - i;
-                    // Solo reemplazamos si el bloque no es aire (para no llenar cuevas con arena)
-                    if (Chunk.GetBlockFromChunkCoordinates(chunkData, pos) != BlockType.Air)
+                    int shoreLocalY = (surfaceHeightNoise - i) - chunkData.worldPosition.y;
+                    // Comprobar que la coordenada de la orilla esté dentro del chunk actual
+                    if (shoreLocalY >= 0 && shoreLocalY < chunkData.chunkHeight) 
                     {
-                        Chunk.SetBlock(chunkData, pos, shoreBlockType);
+                        Vector3Int shorePos = new Vector3Int(x, shoreLocalY, z);
+                        if (Chunk.GetBlockFromChunkCoordinates(chunkData, shorePos) != BlockType.Air)
+                        {
+                            Chunk.SetBlock(chunkData, shorePos, shoreBlockType);
+                        }
                     }
                 }
             }

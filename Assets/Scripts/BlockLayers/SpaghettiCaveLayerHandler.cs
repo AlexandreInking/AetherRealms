@@ -15,49 +15,36 @@ public class SpaghettiCaveLayerHandler : BlockLayerHandler
 
     protected override bool TryHandling(ChunkData chunkData, int x, int y, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
     {
-        // Al igual que con las cuevas de queso, la lógica principal se llamará desde BiomeGenerator.
-        return false;
-    }
-
-    public void GenerateCaves(ChunkData chunkData, int x, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
-    {
-        caveNoiseSettings1.worldOffset = mapSeedOffset;
-        caveNoiseSettings2.worldOffset = mapSeedOffset;
-
-        // Coordenadas mundiales de la columna
-        int worldX = chunkData.worldPosition.x + x;
-        int worldZ = chunkData.worldPosition.z + z;
-
-        // Iteramos verticalmente a través de la columna, usando coordenadas locales del chunk
-        for (int y = 0; y < chunkData.chunkHeight; y++)
+        if (y < surfaceHeightNoise && y > bedrockLayer)
         {
-            int worldY = chunkData.worldPosition.y + y;
+            caveNoiseSettings1.worldOffset = mapSeedOffset;
+            caveNoiseSettings2.worldOffset = mapSeedOffset;
 
-            // Solo generamos cuevas bajo la superficie y por encima de la capa de roca base (bedrock)
-            if (worldY < surfaceHeightNoise && worldY > bedrockLayer)
+            int worldX = chunkData.worldPosition.x + x;
+            int worldZ = chunkData.worldPosition.z + z;
+
+            float noiseValue1 = MyNoise.OctavePerlin3D(
+                worldX,
+                y,
+                worldZ,
+                caveNoiseSettings1
+            );
+
+            float noiseValue2 = MyNoise.OctavePerlin3D(
+                worldX,
+                y,
+                worldZ,
+                caveNoiseSettings2
+            );
+
+            if (noiseValue1 > caveThreshold && noiseValue2 > caveThreshold)
             {
-                // Obtenemos el valor de los dos mapas de ruido 3D
-                float noiseValue1 = MyNoise.OctavePerlin3D(
-                    worldX,
-                    worldY,
-                    worldZ,
-                    caveNoiseSettings1
-                );
-
-                float noiseValue2 = MyNoise.OctavePerlin3D(
-                    worldX,
-                    worldY,
-                    worldZ,
-                    caveNoiseSettings2
-                );
-
-                // Se crea un túnel solo si AMBOS valores de ruido superan el umbral
-                if (noiseValue1 > caveThreshold && noiseValue2 > caveThreshold)
-                {
-                    Vector3Int blockPos = new Vector3Int(x, y, z);
-                    Chunk.SetBlock(chunkData, blockPos, BlockType.Air);
-                }
+                int localY = y - chunkData.worldPosition.y;
+                Vector3Int blockPos = new Vector3Int(x, localY, z);
+                Chunk.SetBlock(chunkData, blockPos, BlockType.Air);
+                return true;
             }
         }
+        return false;
     }
 }

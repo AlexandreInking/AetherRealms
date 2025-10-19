@@ -471,7 +471,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   world: {fileID: 669879938}
-  mapSizeInChunks: 1
+  mapSizeInChunks: 16
 --- !u!4 &598880335
 Transform:
   m_ObjectHideFlags: 0
@@ -516,8 +516,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59f948fdd66a98e4fb68fff3b93f694d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkSize: 16
-  chunkHeight: 100
+  chunkSize: 32
+  chunkHeight: 128
   chunkPrefab: {fileID: 8262579769985768910, guid: a598ca3a22cf70d49bd2f22847980a31, type: 3}
   worldRenderer: {fileID: 107421068}
   terrainGenerator: {fileID: 2098669125}
@@ -610,6 +610,7 @@ GameObject:
   - component: {fileID: 1250780366}
   - component: {fileID: 1250780365}
   - component: {fileID: 1250780364}
+  - component: {fileID: 1250780376}
   m_Layer: 0
   m_Name: GrasslandsBiome
   m_TagString: Untagged
@@ -629,7 +630,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37107be383258d849ab27035ef673a96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780367}
   generateBoneIndicators: 1
   boneNoiseSettings: {fileID: 11400000, guid: b9a0bf5bcfdb2cb4a9af5895653236e8, type: 2}
   bonePlacementThreshold: 0.8
@@ -649,7 +650,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51708683865a15d4eb90afb709cea926, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780369}
   caveNoiseSettings1: {fileID: 11400000, guid: 746eb6d95da21a049bbe33c7c4973881, type: 2}
   caveNoiseSettings2: {fileID: 11400000, guid: ecd27b4e2d5b9a149bc506fed39e3206, type: 2}
   caveThreshold: 0.85
@@ -666,7 +667,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b17c767bd723334480cb5e13da6a61a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780365}
   caveNoiseSettings1: {fileID: 11400000, guid: 5d7d1e3064039a449854a01407856822, type: 2}
   caveNoiseSettings2: {fileID: 11400000, guid: d476782651ddfec4ab192d3e36cf6f3d, type: 2}
   caveThreshold: 0.8
@@ -683,7 +684,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e77b6aed367de4a814138eb9158b9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780366}
   caveNoiseSettings: {fileID: 11400000, guid: 4c1b40cac0f61d34eb53b864140e4c55, type: 2}
   caveThreshold: 0.6
   bedrockLayer: 5
@@ -699,7 +700,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0d57f673c68e04a9d0418827999930, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780372}
   liquidType: 20
   liquidLevel: 10
   shoreBlockType: 8
@@ -716,7 +717,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0d57f673c68e04a9d0418827999930, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780368}
   liquidType: 21
   liquidLevel: 50
   shoreBlockType: 5
@@ -733,7 +734,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 881b1bf2fb0d8764ca7632204cb96de4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780371}
   surfaceBlockType: 2
 --- !u!114 &1250780371
 MonoBehaviour:
@@ -747,7 +748,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1756549054ffac4bb1dec438c80cd9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Next: {fileID: 0}
+  Next: {fileID: 1250780364}
   undergroundBlockType: 3
 --- !u!114 &1250780372
 MonoBehaviour:
@@ -796,9 +797,8 @@ MonoBehaviour:
   biomeNoiseSettings: {fileID: 11400000, guid: f465ded0f6f83ca4eb5fd7e905de9a39, type: 2}
   domainWarping: {fileID: 1250780373}
   useDomainWarping: 1
-  startLayerHandler: {fileID: 1250780372}
-  additionalLayerHandlers:
-  - {fileID: 1250780370}
+  startLayerHandler: {fileID: 1250780376}
+  additionalLayerHandlers: []
   useCheeseCaves: 1
   cheeseCaveLayerHandler: {fileID: 1250780367}
   useSpaghettiCaves: 1
@@ -824,6 +824,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1250780376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250780363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d1730b55d39acb4f947be6b46f680a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Next: {fileID: 1250780370}
 --- !u!1 &1457415639
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,66 +19,52 @@ public class SubterraneanFeatureLayerHandler : BlockLayerHandler
 
     protected override bool TryHandling(ChunkData chunkData, int x, int y, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
     {
-        // La lógica se ejecutará en un método separado.
-        return false;
-    }
+        Vector3Int worldPosition = new Vector3Int(chunkData.worldPosition.x + x, y, chunkData.worldPosition.z + z);
 
-    public void GenerateFeatures(ChunkData chunkData, int x, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
-    {
         if (generateBoneIndicators)
         {
-            // --- Lógica para Huesos como indicador de Petróleo ---
-            // Generamos ruido para determinar si en esta columna (x, z) hay un "punto caliente" para huesos.
-            boneNoiseSettings.worldOffset = mapSeedOffset;
-            float boneNoise = MyNoise.OctavePerlin(chunkData.worldPosition.x + x, chunkData.worldPosition.z + z, boneNoiseSettings);
-            
-            // Si el ruido es alto y estamos cerca de la superficie, colocamos un bloque de hueso.
-            if (boneNoise > bonePlacementThreshold)
+            if (y == surfaceHeightNoise) // Solo comprobar en la superficie
             {
-                // Colocamos el hueso en la superficie del terreno, reemplazando lo que haya.
-                Vector3Int pos = new Vector3Int(x, surfaceHeightNoise, z);
-                Chunk.SetBlock(chunkData, pos, BlockType.BoneStone);
+                boneNoiseSettings.worldOffset = mapSeedOffset;
+                float boneNoise = MyNoise.OctavePerlin(worldPosition.x, worldPosition.z, boneNoiseSettings);
+                if (boneNoise > bonePlacementThreshold)
+                {
+                    Chunk.SetBlock(chunkData, new Vector3Int(x, y, z), BlockType.BoneStone);
+                    return true; // Se ha manejado
+                }
             }
         }
 
         if (generateCrystalIndicators)
         {
-            // --- Lógica para Cristales cerca de la Lava ---
-            // Iteramos solo en las profundidades de la columna actual.
-            for (int y = chunkData.worldPosition.y; y < crystalDepthThreshold; y++)
+            if (y < crystalDepthThreshold && Chunk.GetBlockFromChunkCoordinates(chunkData, new Vector3Int(x, y, z)) == BlockType.Stone)
             {
-                Vector3Int currentPos = new Vector3Int(x, y, z);
-                BlockType blockType = Chunk.GetBlockFromChunkCoordinates(chunkData, currentPos);
-
-                // Solo intentamos colocar cristales si el bloque actual es de piedra.
-                if (blockType == BlockType.Stone)
+                if (IsLavaNearby(chunkData, new Vector3Int(x, y, z)))
                 {
-                    // Comprobamos si hay lava cerca
-                    if (IsLavaNearby(chunkData, currentPos))
+                    if (UnityEngine.Random.value < crystalPlacementChance)
                     {
-                        // Si hay lava, tenemos una pequeña probabilidad de colocar un cristal.
-                        if (Random.value < crystalPlacementChance)
-                        {
-                            Chunk.SetBlock(chunkData, currentPos, BlockType.CrystalStone);
-                        }
+                        Chunk.SetBlock(chunkData, new Vector3Int(x, y, z), BlockType.CrystalStone);
+                        return true; // Se ha manejado
                     }
                 }
             }
         }
+
+        return false; // No se hizo nada, pasar al siguiente.
     }
 
-    private bool IsLavaNearby(ChunkData chunkData, Vector3Int position)
+
+    private bool IsLavaNearby(ChunkData chunkData, Vector3Int localPosition)
     {
-        // Revisa un cubo de 3x3x3 alrededor de la posición para ver si hay lava.
         for (int i = -lavaSearchRadius; i <= lavaSearchRadius; i++)
         {
             for (int j = -lavaSearchRadius; j <= lavaSearchRadius; j++)
             {
                 for (int k = -lavaSearchRadius; k <= lavaSearchRadius; k++)
                 {
-                    if (i == 0 && j == 0 && k == 0) continue; // No revisar el bloque central
+                    if (i == 0 && j == 0 && k == 0) continue;
 
-                    Vector3Int checkPos = position + new Vector3Int(i, j, k);
+                    Vector3Int checkPos = localPosition + new Vector3Int(i, j, k);
                     if (Chunk.GetBlockFromChunkCoordinates(chunkData, checkPos) == BlockType.Lava)
                     {
                         return true;
